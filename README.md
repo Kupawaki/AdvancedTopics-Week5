@@ -18,7 +18,7 @@ This App is completed and functions properly, but is sometimes buggy and I would
 https://www.youtube.com/watch?v=74BMukDxEr8
 #### Stack Overflow
 https://stackoverflow.com/questions/5280176/make-directory-in-android
-####Dexter
+#### Dexter
 https://github.com/Karumi/Dexter
-###Visualizer
+### Visualizer
 https://github.com/gauravk95/audio-visualizer-android
