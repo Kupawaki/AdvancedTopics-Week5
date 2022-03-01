@@ -23,10 +23,10 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity {
-    ListView listView;
-    String[] items;
-
+public class MainActivity extends AppCompatActivity
+{
+    public ListView listView;
+    public String[] items;
     public ArrayList<File> mySongs;
 
     @Override
@@ -34,32 +34,99 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        //Initialize arrayList and set a layout for the listView
         mySongs = new ArrayList<>();
         listView = findViewById(R.id.songLV);
 
+        //As for Permission
         runtimePermission();
-
-
     }
 
+    //Asking for permission with Dexter
     public void runtimePermission()
     {
         Dexter.withContext(this).withPermissions(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.RECORD_AUDIO)
-                .withListener(new MultiplePermissionsListener() {
+                .withListener(new MultiplePermissionsListener()
+                {
                     @Override
-                    public void onPermissionsChecked(MultiplePermissionsReport multiplePermissionsReport) {
+                    public void onPermissionsChecked(MultiplePermissionsReport multiplePermissionsReport)
+                    {
                         displaySongs();
                     }
 
                     @Override
-                    public void onPermissionRationaleShouldBeShown(List<PermissionRequest> list, PermissionToken permissionToken) {
+                    public void onPermissionRationaleShouldBeShown(List<PermissionRequest> list, PermissionToken permissionToken)
+                    {
                         permissionToken.continuePermissionRequest();
 
                     }
                 }).check();
-
     }
 
+    //Custom Adapter Class for the ListView items
+    class customAdapter extends BaseAdapter
+    {
+        @Override
+        public int getCount() {
+            return items.length;
+        }
+
+        @Override
+        public Object getItem(int i) {
+            return null;
+        }
+
+        @Override
+        public long getItemId(int i) {
+            return 0;
+        }
+
+        @Override
+        public View getView(int i, View view, ViewGroup viewGroup)
+        {
+            View myView = getLayoutInflater().inflate(R.layout.list_item, null);
+            TextView textsong = myView.findViewById(R.id.songNameTV);
+            textsong.setSelected(true);
+            textsong.setText(items[i]);
+
+            return myView;
+        }
+    }
+
+    //This calls the findSong method, remove the extensions, sets the adapter, sets the onClickListener, and finally starts the PlayerActivity on click
+    void displaySongs()
+    {
+        File path = new File("/storage/self/primary");
+        findSong(path);
+        Log.d("LFP", "Size: " + mySongs.size());
+
+        //Rename the songs (remove the extensions)
+        items = new String[mySongs.size()];
+        for (int i = 0; i<mySongs.size();i++)
+        {
+            items[i] = mySongs.get(i).getName().toString().replace(".mp3", "").replace(".wav", "");
+        }
+
+        //Set the adapter
+        customAdapter customAdapter = new customAdapter();
+        listView.setAdapter(customAdapter);
+
+        //How the song is played when it is clicked
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener()
+        {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l)
+            {
+                String songName = (String) listView.getItemAtPosition(i);
+                startActivity(new Intent(getApplicationContext(), PlayerActivity.class)
+                        .putExtra("songs", mySongs)
+                        .putExtra("songname", songName)
+                        .putExtra("pos", i));
+            }
+        });
+    }
+
+    //This uses recursion to find files that have a specific extension and them add them to the arrayList, so they can then be added to the ListView
     public void findSong(File dir)
     {
         Log.d("TESTING", "Call recieved");
@@ -111,67 +178,5 @@ public class MainActivity extends AppCompatActivity {
         }
 
         Log.d("LFP", "Size Fir: " + mySongs.size());
-    }
-
-    void displaySongs()
-    {
-        File path = new File("/storage/self/primary");
-        findSong(path);
-
-        Log.d("LFP", "Size: " + mySongs.size());
-
-        items = new String[mySongs.size()];
-        for (int i = 0; i<mySongs.size();i++)
-        {
-            items[i] = mySongs.get(i).getName().toString().replace(".mp3", "").replace(".wav", "");
-
-        }
-        /*ArrayAdapter<String> myAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, items);
-        listView.setAdapter(myAdapter);*/
-
-        customAdapter customAdapter = new customAdapter();
-        listView.setAdapter(customAdapter);
-
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                String songName = (String) listView.getItemAtPosition(i);
-                startActivity(new Intent(getApplicationContext(), PlayerActivity.class)
-                        .putExtra("songs", mySongs)
-                        .putExtra("songname", songName)
-                        .putExtra("pos", i));
-            }
-        });
-    }
-
-
-    class customAdapter extends BaseAdapter
-    {
-
-        @Override
-        public int getCount() {
-            return items.length;
-        }
-
-        @Override
-        public Object getItem(int i) {
-            return null;
-        }
-
-        @Override
-        public long getItemId(int i) {
-            return 0;
-        }
-
-        @Override
-        public View getView(int i, View view, ViewGroup viewGroup) {
-
-            View myView = getLayoutInflater().inflate(R.layout.list_item, null);
-            TextView textsong = myView.findViewById(R.id.txtsongname);
-            textsong.setSelected(true);
-            textsong.setText(items[i]);
-
-            return myView;
-        }
     }
 }

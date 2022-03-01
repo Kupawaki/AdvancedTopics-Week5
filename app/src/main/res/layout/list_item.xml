@@ -13,7 +13,7 @@
         android:layout_height="wrap_content">
 
         <ImageView
-            android:id="@+id/imgsong"
+            android:id="@+id/songIV"
             android:layout_alignParentStart="true"
             android:layout_alignParentTop="true"
             android:layout_marginStart="5dp"
@@ -26,21 +26,21 @@
         </ImageView>
 
         <TextView
-            android:id="@+id/txtsongname"
+            android:id="@+id/songNameTV"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
             android:layout_alignParentEnd="true"
             android:layout_marginStart="5dp"
             android:layout_marginEnd="5dp"
-            android:layout_toEndOf="@+id/imgsong"
-            android:padding="6dp"
-            android:textColor="#FFF"
-            android:text="Song Name"
-            android:textSize="15sp"
-            android:singleLine="true"
-            android:marqueeRepeatLimit="marquee_forever"
+            android:layout_toEndOf="@+id/songIV"
             android:ellipsize="marquee"
+            android:marqueeRepeatLimit="marquee_forever"
+            android:padding="6dp"
             android:scrollHorizontally="true"
-            android:layout_width="wrap_content"
-            android:layout_height="40dp">
+            android:singleLine="true"
+            android:text="Song Name"
+            android:textColor="#FFF"
+            android:textSize="15sp">
 
         </TextView>
 

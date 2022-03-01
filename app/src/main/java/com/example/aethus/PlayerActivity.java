@@ -22,30 +22,37 @@ import com.gauravk.audiovisualizer.visualizer.BarVisualizer;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Objects;
 
-public class PlayerActivity extends AppCompatActivity {
-    Button btnplay, btnnext, btnprev, btnff, btnfr;
-    TextView txtsname, txtsstart, txtsstop;
-    SeekBar seekmusic;
+public class PlayerActivity extends AppCompatActivity
+{
+    public Button playBTN, nextBTN, prevBTN, fastForwardBTN, fastRewindBTN;
+    TextView songNameTV, songStartTV, songEndTV;
+    SeekBar seekBar;
     BarVisualizer visualizer;
     ImageView imageView;
 
-    String sname;
+    String songName;
     public static final String EXTRA_NAME = "song_name";
     static MediaPlayer mediaPlayer;
     int position;
     ArrayList<File> mySongs;
     Thread updateseekbar;
 
+    //This refers to the app bar
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         if (item.getItemId()==android.R.id.home)
         {
+            //Handy little method I didn't have to write myself
             onBackPressed();
         }
+
+        //lesson learned
         return super.onOptionsItemSelected(item);
     }
 
+    //The visualizer takes a bunch of resources, so we should explode it when we don't need it
     @Override
     protected void onDestroy() {
         if (visualizer != null)
@@ -60,42 +67,49 @@ public class PlayerActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_player);
 
-        getSupportActionBar().setTitle("Now Playing");
+        Objects.requireNonNull(getSupportActionBar()).setTitle("Now Playing");
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setDisplayShowHomeEnabled(true);
 
-        btnprev = findViewById(R.id.btnprev);
-        btnnext = findViewById(R.id.btnnext);
-        btnplay = findViewById(R.id.playbtn);
-        btnff = findViewById(R.id.btnff);
-        btnfr = findViewById(R.id.btnfr);
-        txtsname = findViewById(R.id.txtsn);
-        txtsstart = findViewById(R.id.txtsstart);
-        txtsstop = findViewById(R.id.txtsstop);
-        seekmusic = findViewById(R.id.seekbar);
+        prevBTN = findViewById(R.id.btnprev);
+        nextBTN = findViewById(R.id.btnnext);
+        playBTN = findViewById(R.id.playbtn);
+        fastForwardBTN = findViewById(R.id.btnff);
+        fastRewindBTN = findViewById(R.id.btnfr);
+
+        songNameTV = findViewById(R.id.txtsn);
+        songStartTV = findViewById(R.id.txtsstart);
+        songEndTV = findViewById(R.id.txtsstop);
+
+        seekBar = findViewById(R.id.seekbar);
         visualizer = findViewById(R.id.blast);
         imageView = findViewById(R.id.imageview);
 
+        //If you enter the activity with a song already playing it should stop
         if (mediaPlayer != null)
         {
             mediaPlayer.stop();
             mediaPlayer.release();
         }
 
+        //Get the data we passed in
         Intent i = getIntent();
         Bundle bundle = i.getExtras();
 
         mySongs = (ArrayList) bundle.getParcelableArrayList("songs");
         String songName = i.getStringExtra("songname");
         position = bundle.getInt("pos",0);
-        txtsname.setSelected(true);
-        Uri uri = Uri.parse(mySongs.get(position).toString());
-        sname = mySongs.get(position).getName();
-        txtsname.setText(sname);
+        songNameTV.setSelected(true);
 
+        Uri uri = Uri.parse(mySongs.get(position).toString());
+        this.songName = mySongs.get(position).getName();
+        songNameTV.setText(this.songName);
+
+        //Create the player
         mediaPlayer = MediaPlayer.create(getApplicationContext(), uri);
         mediaPlayer.start();
 
+        //A thread that is used to update the seekbar
         updateseekbar = new Thread()
         {
             @Override
@@ -108,7 +122,7 @@ public class PlayerActivity extends AppCompatActivity {
                     try {
                         sleep(500);
                         currentposition = mediaPlayer.getCurrentPosition();
-                        seekmusic.setProgress(currentposition);
+                        seekBar.setProgress(currentposition);
                     }
                     catch (InterruptedException | IllegalStateException e)
                     {
@@ -117,12 +131,13 @@ public class PlayerActivity extends AppCompatActivity {
                 }
             }
         };
-        seekmusic.setMax(mediaPlayer.getDuration());
-        updateseekbar.start();
-        seekmusic.getProgressDrawable().setColorFilter(getResources().getColor(R.color.colorPrimary), PorterDuff.Mode.MULTIPLY);
-        seekmusic.getThumb().setColorFilter(getResources().getColor(R.color.colorPrimary), PorterDuff.Mode.SRC_IN);
 
-        seekmusic.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+        seekBar.setMax(mediaPlayer.getDuration());
+        updateseekbar.start();
+        seekBar.getProgressDrawable().setColorFilter(getResources().getColor(R.color.colorPrimary), PorterDuff.Mode.MULTIPLY);
+        seekBar.getThumb().setColorFilter(getResources().getColor(R.color.colorPrimary), PorterDuff.Mode.SRC_IN);
+
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
 
@@ -136,12 +151,11 @@ public class PlayerActivity extends AppCompatActivity {
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
                 mediaPlayer.seekTo(seekBar.getProgress());
-
             }
         });
 
         String endTime = createTime(mediaPlayer.getDuration());
-        txtsstop.setText(endTime);
+        songEndTV.setText(endTime);
 
         final Handler handler = new Handler();
         final int delay = 1000;
@@ -150,107 +164,91 @@ public class PlayerActivity extends AppCompatActivity {
             @Override
             public void run() {
                 String currentTime = createTime(mediaPlayer.getCurrentPosition());
-                txtsstart.setText(currentTime);
+                songStartTV.setText(currentTime);
                 handler.postDelayed(this, delay);
             }
         }, delay);
 
 
 
-        btnplay.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (mediaPlayer.isPlaying())
-                {
-                    btnplay.setBackgroundResource(R.drawable.ic_play);
-                    mediaPlayer.pause();
-                }
-                else
-                {
-                    btnplay.setBackgroundResource(R.drawable.ic_pause);
-                    mediaPlayer.start();
-                }
+        //Start OnClickListeners--------------------------------------------------------------------
+        playBTN.setOnClickListener(view -> {
+            if (mediaPlayer.isPlaying())
+            {
+                playBTN.setBackgroundResource(R.drawable.ic_play);
+                mediaPlayer.pause();
             }
-        });
-        //next listener
-
-        mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-            @Override
-            public void onCompletion(MediaPlayer mediaPlayer) {
-                btnnext.performClick();
+            else
+            {
+                playBTN.setBackgroundResource(R.drawable.ic_pause);
+                mediaPlayer.start();
             }
         });
 
+        //If the song ends, play the next one
+        mediaPlayer.setOnCompletionListener(mediaPlayer -> nextBTN.performClick());
+
+        //Weird Visualizer stuff that is required
         int audiosessionId = mediaPlayer.getAudioSessionId();
         if (audiosessionId != -1)
         {
             visualizer.setAudioSessionId(audiosessionId);
         }
 
-        btnnext.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                mediaPlayer.stop();
-                mediaPlayer.release();
-                position = ((position+1)%mySongs.size());
-                Uri u = Uri.parse(mySongs.get(position).toString());
-                mediaPlayer = MediaPlayer.create(getApplicationContext(), u);
-                sname = mySongs.get(position).getName();
-                txtsname.setText(sname);
-                mediaPlayer.start();
-                btnplay.setBackgroundResource(R.drawable.ic_pause);
-                startAnimation(imageView);
-                int audiosessionId = mediaPlayer.getAudioSessionId();
-                if (audiosessionId != -1)
-                {
-                    visualizer.setAudioSessionId(audiosessionId);
-                }
+        nextBTN.setOnClickListener(view -> {
+            mediaPlayer.stop();
+            mediaPlayer.release();
+            position = ((position+1)%mySongs.size());
+            Uri u = Uri.parse(mySongs.get(position).toString());
+            mediaPlayer = MediaPlayer.create(getApplicationContext(), u);
+            this.songName = mySongs.get(position).getName();
+            songNameTV.setText(this.songName);
+            mediaPlayer.start();
+            playBTN.setBackgroundResource(R.drawable.ic_pause);
+            startAnimation(imageView);
+            int audiosessionId1 = mediaPlayer.getAudioSessionId();
+            if (audiosessionId1 != -1)
+            {
+                visualizer.setAudioSessionId(audiosessionId1);
+            }
 
+        });
+
+        prevBTN.setOnClickListener(view -> {
+            mediaPlayer.stop();
+            mediaPlayer.release();
+            position = ((position-1)<0)?(mySongs.size()-1):(position-1);
+
+            Uri u = Uri.parse(mySongs.get(position).toString());
+            mediaPlayer = MediaPlayer.create(getApplicationContext(), u);
+            this.songName = mySongs.get(position).getName();
+            songNameTV.setText(this.songName);
+            mediaPlayer.start();
+            playBTN.setBackgroundResource(R.drawable.ic_pause);
+            startAnimation(imageView);
+            int audiosessionId12 = mediaPlayer.getAudioSessionId();
+            if (audiosessionId12 != -1)
+            {
+                visualizer.setAudioSessionId(audiosessionId12);
             }
         });
 
-        btnprev.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                mediaPlayer.stop();
-                mediaPlayer.release();
-                position = ((position-1)<0)?(mySongs.size()-1):(position-1);
-
-                Uri u = Uri.parse(mySongs.get(position).toString());
-                mediaPlayer = MediaPlayer.create(getApplicationContext(), u);
-                sname = mySongs.get(position).getName();
-                txtsname.setText(sname);
-                mediaPlayer.start();
-                btnplay.setBackgroundResource(R.drawable.ic_pause);
-                startAnimation(imageView);
-                int audiosessionId = mediaPlayer.getAudioSessionId();
-                if (audiosessionId != -1)
-                {
-                    visualizer.setAudioSessionId(audiosessionId);
-                }
+        fastForwardBTN.setOnClickListener(view ->
+        {
+            if (mediaPlayer.isPlaying())
+            {
+                mediaPlayer.seekTo(mediaPlayer.getCurrentPosition()+10000);
             }
         });
 
-        btnff.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (mediaPlayer.isPlaying())
-                {
-                    mediaPlayer.seekTo(mediaPlayer.getCurrentPosition()+10000);
-                }
+        fastRewindBTN.setOnClickListener(view ->
+        {
+            if (mediaPlayer.isPlaying())
+            {
+                mediaPlayer.seekTo(mediaPlayer.getCurrentPosition()-10000);
             }
         });
-
-        btnfr.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (mediaPlayer.isPlaying())
-                {
-                    mediaPlayer.seekTo(mediaPlayer.getCurrentPosition()-10000);
-                }
-            }
-        });
-    }
+    }//End OnClickListeners-------------------------------------------------------------------------
 
     public void startAnimation(View view)
     {
