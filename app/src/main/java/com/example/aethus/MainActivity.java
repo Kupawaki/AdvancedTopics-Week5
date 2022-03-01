@@ -3,153 +3,67 @@ package com.example.aethus;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.Manifest;
-import android.media.MediaPlayer;
+import android.content.Intent;
 import android.os.Bundle;
-import android.os.Environment;
 import android.util.Log;
 import android.view.View;
-import android.widget.ArrayAdapter;
-import android.widget.Button;
+import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.BaseAdapter;
 import android.widget.ListView;
-import android.widget.Toast;
+import android.widget.TextView;
 
 import com.karumi.dexter.Dexter;
+import com.karumi.dexter.MultiplePermissionsReport;
 import com.karumi.dexter.PermissionToken;
-import com.karumi.dexter.listener.PermissionDeniedResponse;
-import com.karumi.dexter.listener.PermissionGrantedResponse;
 import com.karumi.dexter.listener.PermissionRequest;
-import com.karumi.dexter.listener.single.PermissionListener;
+import com.karumi.dexter.listener.multi.MultiplePermissionsListener;
 
 import java.io.File;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.List;
 
-public class MainActivity extends AppCompatActivity
-{
-    public ArrayList<File> listOfUsefulFiles;
+public class MainActivity extends AppCompatActivity {
     ListView listView;
-    String[] itemsToDisplay;
+    String[] items;
+
+    public ArrayList<File> mySongs;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState)
-    {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        //Initialize variables to avoid the great and terrible NullPointerException
-        listOfUsefulFiles = new ArrayList<>();
+        mySongs = new ArrayList<>();
         listView = findViewById(R.id.songLV);
 
-        //Do the thing
-        askForPermission();
+        runtimePermission();
 
-        //Make the directory I plan to put all the stuff into.
-        File directory = new File(Environment.getExternalStorageDirectory()+File.separator+"Aethus");
-        if (directory.exists())
-        {
-            Log.d("FMS", "Directory Already Exists");
-        }
-        else
-        {
-            directory.mkdirs();
-            Log.d("FMS", "Directory Created");
-        }
+
     }
 
-    //TODO - Nothing, I am done with this
-    public void askForPermission()
+    public void runtimePermission()
     {
-        Dexter.withContext(this).withPermission(Manifest.permission.READ_EXTERNAL_STORAGE).withListener(new PermissionListener()
-        {
-            @Override
-            public void onPermissionGranted(PermissionGrantedResponse permissionGrantedResponse)
-            {
-                Log.d("PRMS", "Permission to Read Granted");
-                displaySongs();
-            }
+        Dexter.withContext(this).withPermissions(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.RECORD_AUDIO)
+                .withListener(new MultiplePermissionsListener() {
+                    @Override
+                    public void onPermissionsChecked(MultiplePermissionsReport multiplePermissionsReport) {
+                        displaySongs();
+                    }
 
-            @Override
-            public void onPermissionDenied(PermissionDeniedResponse permissionDeniedResponse)
-            {
-                Log.d("PRMS", "Permission to Read Denied - Preparing to Explode");
-            }
+                    @Override
+                    public void onPermissionRationaleShouldBeShown(List<PermissionRequest> list, PermissionToken permissionToken) {
+                        permissionToken.continuePermissionRequest();
 
-            @Override
-            public void onPermissionRationaleShouldBeShown(PermissionRequest permissionRequest, PermissionToken permissionToken)
-            {
-                Log.d("PRMS", "Permission to Read In A Strange State - Will Continue To Ask");
-                permissionToken.continuePermissionRequest();
-            }
-        }).check();
+                    }
+                }).check();
 
-        Dexter.withContext(this).withPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE).withListener(new PermissionListener()
-        {
-            @Override
-            public void onPermissionGranted(PermissionGrantedResponse permissionGrantedResponse)
-            {
-                Log.d("PRMS", "Permission to Write Granted");
-            }
-
-            @Override
-            public void onPermissionDenied(PermissionDeniedResponse permissionDeniedResponse)
-            {
-                Log.d("PRMS", "Permission to Write Denied - Preparing to Explode");
-            }
-
-            @Override
-            public void onPermissionRationaleShouldBeShown(PermissionRequest permissionRequest, PermissionToken permissionToken)
-            {
-                Log.d("PRMS", "Permission to Write In A Strange State - Will Continue To Ask");
-                permissionToken.continuePermissionRequest();
-            }
-        }).check();
     }
 
-//    public ArrayList<File> findSong(File file)
-//    {
-//        ArrayList arrayList = new ArrayList();
-//        File[] files = file.listFiles();
-//        if (files != null)
-//        {
-//            for (File singlefile : files)
-//            {
-//                if (singlefile.isDirectory() && !singlefile.isHidden())
-//                {
-//
-//                    Log.d("BIG SAD", "Name of Directory: " + singlefile.getName().toString());
-//                    Log.d("BIG SAD", "Contents of ListFiles: " + files.toString());
-//                    arrayList.addAll(findSong(singlefile));
-//
-//                }
-//                else
-//                {
-//                    if (singlefile.getName().endsWith(".wav"))
-//                    {
-//                        arrayList.add(singlefile);
-//                        Log.d("BIG SAD", "Name of File: " + singlefile.getName().toString());
-//                    }
-//                    else if (singlefile.getName().endsWith(".mp3"))
-//                    {
-//                        arrayList.add(singlefile);
-//                        Log.d("BIG SAD", "Name of File: " + singlefile.getName().toString());
-//                    }
-//                    else if (singlefile.getName().endsWith(".ogg"))
-//                    {
-//                        arrayList.add(singlefile);
-//                        Log.d("BIG SAD", "Name of File: " + singlefile.getName().toString());
-//                    }
-//                }
-//            }
-//            Log.d("BIG SAD", "Did not return null");
-//            return arrayList;
-//        }
-//        Log.d("BIG SAD", "Returned NULL");
-//        return arrayList;
-//    }
-
-    public void listFiles(File dir)
+    public void findSong(File dir)
     {
+        Log.d("TESTING", "Call recieved");
+
         File[] files = dir.listFiles();
         assert files != null;
         for (File singleFile:files)
@@ -161,7 +75,7 @@ public class MainActivity extends AppCompatActivity
             else if (singleFile.isDirectory() && !singleFile.isHidden())
             {
                 Log.d("LFP", "Directory --> Path of Directory: " + singleFile);
-                listFiles(singleFile);
+                findSong(singleFile);
             }
             else
             {
@@ -173,7 +87,7 @@ public class MainActivity extends AppCompatActivity
                     Log.d("LFP", "Found it! Its called: " + singleFile.getName());
                     Log.d("LFP", "------------------------.ogg------------------------");
                     Log.d("LFP", "----------------------------------------------------");
-                    listOfUsefulFiles.add(singleFile);
+                    mySongs.add(singleFile);
                 }
                 else if (singleFile.getName().endsWith(".mp3"))
                 {
@@ -182,7 +96,7 @@ public class MainActivity extends AppCompatActivity
                     Log.d("LFP", "Found it! Its called: " + singleFile.getName());
                     Log.d("LFP", "------------------------.mp3------------------------");
                     Log.d("LFP", "----------------------------------------------------");
-                    listOfUsefulFiles.add(singleFile);
+                    mySongs.add(singleFile);
                 }
                 else if (singleFile.getName().endsWith(".wav"))
                 {
@@ -191,30 +105,73 @@ public class MainActivity extends AppCompatActivity
                     Log.d("LFP", "Found it! Its called: " + singleFile.getName());
                     Log.d("LFP", "------------------------.wav------------------------");
                     Log.d("LFP", "----------------------------------------------------");
-                    listOfUsefulFiles.add(singleFile);
+                    mySongs.add(singleFile);
                 }
             }
         }
+
+        Log.d("LFP", "Size Fir: " + mySongs.size());
     }
 
-    private void displaySongs()
+    void displaySongs()
     {
         File path = new File("/storage/self/primary");
-        listFiles(path);
+        findSong(path);
 
-        for (File files:listOfUsefulFiles)
+        Log.d("LFP", "Size: " + mySongs.size());
+
+        items = new String[mySongs.size()];
+        for (int i = 0; i<mySongs.size();i++)
         {
-            Log.d("USEFUL FILES", "File: " + files);
+            items[i] = mySongs.get(i).getName().toString().replace(".mp3", "").replace(".wav", "");
+
+        }
+        /*ArrayAdapter<String> myAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, items);
+        listView.setAdapter(myAdapter);*/
+
+        customAdapter customAdapter = new customAdapter();
+        listView.setAdapter(customAdapter);
+
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                String songName = (String) listView.getItemAtPosition(i);
+                startActivity(new Intent(getApplicationContext(), PlayerActivity.class)
+                        .putExtra("songs", mySongs)
+                        .putExtra("songname", songName)
+                        .putExtra("pos", i));
+            }
+        });
+    }
+
+
+    class customAdapter extends BaseAdapter
+    {
+
+        @Override
+        public int getCount() {
+            return items.length;
         }
 
-        itemsToDisplay = new String[listOfUsefulFiles.size()];
-        Log.d("USEFUL FILES", "Items size: " + itemsToDisplay.length);
-        for(int i = 0; i < listOfUsefulFiles.size(); i++)
-        {
-            itemsToDisplay[i] = listOfUsefulFiles.get(i).getName().toString().replace(".mp3", "").replace(".wav", "").replace(".obb", "");
+        @Override
+        public Object getItem(int i) {
+            return null;
         }
 
-        ArrayAdapter<String> myAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, itemsToDisplay);
-        listView.setAdapter(myAdapter);
+        @Override
+        public long getItemId(int i) {
+            return 0;
+        }
+
+        @Override
+        public View getView(int i, View view, ViewGroup viewGroup) {
+
+            View myView = getLayoutInflater().inflate(R.layout.list_item, null);
+            TextView textsong = myView.findViewById(R.id.txtsongname);
+            textsong.setSelected(true);
+            textsong.setText(items[i]);
+
+            return myView;
+        }
     }
 }
