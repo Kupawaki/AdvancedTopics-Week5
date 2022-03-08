@@ -21,6 +21,9 @@ import com.karumi.dexter.listener.multi.MultiplePermissionsListener;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity
@@ -106,6 +109,8 @@ public class MainActivity extends AppCompatActivity
         {
             items[i] = mySongs.get(i).getName().toString().replace(".mp3", "").replace(".wav", "");
         }
+        Arrays.sort(items);
+
 
         //Set the adapter
         customAdapter customAdapter = new customAdapter();
@@ -176,7 +181,14 @@ public class MainActivity extends AppCompatActivity
                 }
             }
         }
-
-        Log.d("LFP", "Size Fir: " + mySongs.size());
     }
+
+    class MyComparator implements Comparator<String>
+    {
+        public int compare(String string1, String string2)
+        {
+            return string1.compareTo(string2);
+        }
+    }
+
 }
