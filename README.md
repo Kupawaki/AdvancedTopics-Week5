@@ -22,3 +22,7 @@ https://stackoverflow.com/questions/5280176/make-directory-in-android
 https://github.com/Karumi/Dexter
 ### Visualizer
 https://github.com/gauravk95/audio-visualizer-android
+
+## Beta Version APK
+You can find the app for yourself here:
+https://drive.google.com/file/d/1SGcSNefRKQnQBaMN8gkEovjgIipflb38/view?usp=sharing
