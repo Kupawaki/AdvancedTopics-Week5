@@ -31,6 +31,7 @@ public class MainActivity extends AppCompatActivity
     public ListView listView;
     public String[] items;
     public ArrayList<File> mySongs;
+    public ArrayList<File> mySongsSorted;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,6 +40,7 @@ public class MainActivity extends AppCompatActivity
 
         //Initialize arrayList and set a layout for the listView
         mySongs = new ArrayList<>();
+        mySongsSorted = new ArrayList<>();
         listView = findViewById(R.id.songLV);
 
         //As for Permission
@@ -101,6 +103,7 @@ public class MainActivity extends AppCompatActivity
     {
         File path = new File("/storage/self/primary");
         findSong(path);
+        test();
         Log.d("LFP", "Size: " + mySongs.size());
 
         //Rename the songs (remove the extensions)
@@ -109,8 +112,6 @@ public class MainActivity extends AppCompatActivity
         {
             items[i] = mySongs.get(i).getName().toString().replace(".mp3", "").replace(".wav", "");
         }
-        Arrays.sort(items);
-
 
         //Set the adapter
         customAdapter customAdapter = new customAdapter();
@@ -183,12 +184,22 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    class MyComparator implements Comparator<String>
+    public void test()
     {
-        public int compare(String string1, String string2)
+        for (int i = 0; i < mySongs.size(); i++)
         {
-            return string1.compareTo(string2);
+            Log.d("TEST", mySongs.get(i).getName());
+        }
+        Log.d("TEST", "----------------------------------------------");
+
+        Collections.sort(mySongs);
+        for (int i = 0; i < mySongs.size(); i++)
+        {
+            Log.d("TEST", mySongs.get(i).getName());
         }
     }
 
+//    if (string1 > string2) it returns a positive value.
+//    i.e.(string1 == string2) it returns 0.
+//    if (string1 < string2) it returns a negative value.
 }
